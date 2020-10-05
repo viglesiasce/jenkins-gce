@@ -1,0 +1,33 @@
+#cloud-config
+boot_cmd:
+- mkdir -p /var/lib/jenkins
+
+disk_setup:
+  /dev/disk/by-id/google-jenkins-home:
+    # When layout is "true" it means single partition the entire device.
+    layout: True
+    overwrite: False
+
+fs_setup:
+- label: jenkins-home
+  filesystem: 'ext4'
+  device: '/dev/disk/by-id/google-jenkins-home'
+  partition: 'auto'
+  overwrite: False
+
+mounts:
+ - [ /dev/disk/by-id/google-jenkins-home, /var/lib/jenkins]
+
+runcmd:
+- apt-get update
+- apt-get install -y openjdk-8-jdk wget unzip
+- wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+- sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
+- apt-get update
+- apt-get install -y jenkins
+- chown -R jenkins:jenkins /var/lib/jenkins
+- systemctl start jenkins
+- systemctl enable jenkins
+- wget https://releases.hashicorp.com/packer/1.5.1/packer_1.5.1_linux_amd64.zip
+- unzip packer_1.5.1_linux_amd64.zip
+- mv packer /usr/local/bin/
